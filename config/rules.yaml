@@ -1,0 +1,147 @@
+# Every threshold the tool uses lives here, so the team can tune the playbook
+# without touching code. Values are in GBP unless stated.
+
+data:
+  id_column: account_id
+  months: [gmv_sep, gmv_oct, gmv_nov, gmv_dec, gmv_jan, gmv_feb]   # oldest -> newest
+  window_months: 6
+  required:
+    - account_id
+    - ownership
+    - gmv_total_6m
+    - orders_6m
+    - broker_reliance_pct
+    - manual_orders
+    - self_serve_orders
+  numeric:
+    - tenure_months
+    - gmv_total_6m
+    - orders_6m
+    - gmv_sep
+    - gmv_oct
+    - gmv_nov
+    - gmv_dec
+    - gmv_jan
+    - gmv_feb
+    - gmv_trend_pct
+    - broker_reliance_pct
+    - manual_orders
+    - self_serve_orders
+    - app_active_days_6m
+    - pdp_views_6m
+    - make_an_offer_6m
+    - chat_threads
+    - video_call_requests
+    - handpick_orders
+    - bundle_orders
+    - bundle_gmv_share_pct
+  percent: [broker_reliance_pct, bundle_gmv_share_pct]
+  text: [account_id, ownership, buyer_persona, region, country, account_status]
+
+  # Header spellings we have seen or expect from other exports
+  column_aliases:
+    account: account_id
+    id: account_id
+    owner: ownership
+    persona: buyer_persona
+    status: account_status
+
+  # Canonical values. Keys are matched case-insensitively after trimming.
+  value_maps:
+    ownership:
+      account managed: Account Managed
+      account-managed: Account Managed
+      am: Account Managed
+      managed: Account Managed
+      self serve: Self Serve
+      self-serve: Self Serve
+      selfserve: Self Serve
+      ss: Self Serve
+    buyer_persona:
+      reseller: Reseller
+      online reseller: Reseller
+      retailer: Retailer
+      independent retailer: Retailer
+      shop: Retailer
+    account_status:
+      active: Active
+      duplicate: Duplicate
+      dupe: Duplicate
+      inactive: Inactive
+      churned: Inactive
+    country:
+      uk: United Kingdom
+      gb: United Kingdom
+      great britain: United Kingdom
+      england: United Kingdom
+      us: United States
+      usa: United States
+      united states of america: United States
+      deutschland: Germany
+      czechia: Czech Republic
+
+  # The source "region" column mixes countries (UK, France, Germany, US) with
+  # blocs (EU, ROW). We keep it, and derive a consistent region from country.
+  country_to_region:
+    United Kingdom: United Kingdom
+    France: France
+    Germany: Germany
+    United States: United States
+    Australia: ROW
+    New Zealand: ROW
+    Canada: ROW
+    _default_europe: EU
+    _default: ROW
+  europe_countries: [Austria, Belgium, Czech Republic, Denmark, Finland, Hungary,
+                     Ireland, Italy, Lithuania, Netherlands, Norway, Poland, Portugal,
+                     Romania, Slovakia, Spain, Sweden, Switzerland]
+
+cleaning:
+  gmv_total_tolerance_gbp: 5          # rounding gaps smaller than this are silently fixed
+  broker_pct_mismatch_flag_pts: 25    # flag when reported % and order counts disagree this much
+
+segmentation:
+  # Account-managed customers split cleanly in this data: nobody sits between
+  # 20% and 40% broker reliance. 40% is the line between "the AM buys for them"
+  # and "they buy for themselves".
+  broker_reliant_min_pct: 40
+  # "Barely touches the product" (all three must hold)
+  low_digital:
+    app_active_days_max: 14
+    pdp_views_max: 99
+    offers_max: 3
+  # Self-serving signals for an account-managed customer to count as healthy
+  self_serving:
+    app_active_days_min: 5
+    pdp_views_min: 30
+    self_serve_orders_min: 2
+
+recency:
+  cooling_months_without_spend: 2     # nothing in the last 2 months on book
+  lapsed_months_without_spend: 3      # nothing in the last 3+ months on book
+  new_account_max_tenure: 2
+
+value:
+  # Run-rate = GMV per month on book (months on book = min(tenure, 6))
+  key_account_runrate: 1500           # ~£9k per 6 months
+  mid_account_runrate: 300            # ~£1.8k per 6 months
+  runrate_cap_for_score: 20000
+
+plays:
+  growth:
+    high_intent_pdp_views: 150
+    high_intent_offers: 5
+    views_per_order_friction: 150     # lots of browsing per order = friction to fix
+    low_chat_threads: 3
+    bundle_heavy_share_pct: 50
+    video_call_runrate: 400           # big enough baskets to justify a live session
+    chat_heavy_threads: 10
+
+routing:
+  # Who acts. Human = account manager, review = agent drafts and AM approves,
+  # auto = agent sends without review.
+  human_min_runrate: 1500
+  review_min_runrate: 300
+  daily_human_capacity: 12            # AM touches per day the queue will schedule
+  contact_cooldown_days: 14           # never re-contact an account inside this window
+  follow_up_days: 7                   # open human tasks older than this get flagged
