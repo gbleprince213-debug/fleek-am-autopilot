@@ -115,6 +115,9 @@ segmentation:
     app_active_days_min: 5
     pdp_views_min: 30
     self_serve_orders_min: 2
+  # A fall in broker reliance of this many points between runs is logged as
+  # migration progress
+  migration_progress_pts: 10
 
 recency:
   cooling_months_without_spend: 2     # nothing in the last 2 months on book
@@ -144,4 +147,9 @@ routing:
   review_min_runrate: 300
   daily_human_capacity: 12            # AM touches per day the queue will schedule
   contact_cooldown_days: 14           # never re-contact an account inside this window
+  same_play_repeat_days: 30           # never repeat the same play to an account inside this window
   follow_up_days: 7                   # open human tasks older than this get flagged
+
+dashboard:
+  max_accounts: 2000                  # embed the top N accounts; the full book is in accounts.csv
+  max_outbox_rows: 300                # automated messages are summarised beyond this
