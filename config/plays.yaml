@@ -1,0 +1,333 @@
+# The playbook: every next-best action the tool can recommend, who runs it,
+# and the draft it writes. Edit wording here; the code only fills the blanks.
+#
+# owner:  human  = account manager does it (call / meeting)
+#         review = agent drafts, AM approves before it goes
+#         auto   = agent sends on its own
+#         by_value = decided by run-rate thresholds in rules.yaml (routing)
+#
+# Placeholders available in every template:
+#   {name} {sender} {account_id} {gmv_6m} {orders} {manual_orders} {broker_pct}
+#   {runrate} {avg_order} {last_order_month} {first_order_month} {country}
+#   {persona_phrase} {product_phrase} {chat_threads} {video_calls} {pdp_views}
+#   {offers} {readiness} {app_link} {chat_link} {video_link} {perk}
+
+settings:
+  sender: Greg
+  customer_name_fallback: there
+  links:
+    app: https://joinfleek.com
+    chat: https://joinfleek.com/chat
+    video: https://joinfleek.com/book-a-call
+  # A non-monetary lever; agree a commercial one with the team before scaling
+  perk: first look at new drops before they go live
+
+plays:
+
+  fix_crm_duplicate:
+    title: Merge duplicate CRM record before outreach
+    problem: hygiene
+    owner: human
+    channel: CRM task
+    base_priority: 40
+    goal: One clean record, so nobody double-contacts the customer or splits their history.
+    call_note: |
+      HOLD OUTREACH. The CRM flags this record as a duplicate, but it carries
+      £{gmv_6m} over {orders} orders ({broker_pct}% placed by an AM).
+      1. Find the primary record (same company, email or shipping address).
+      2. Merge order history and owner onto the primary.
+      3. Re-run the tool: the account will get its real next action.
+
+      Spend stays in all portfolio totals until merged.
+
+  rescue_key_account:
+    title: Win-back call before anything else
+    problem: retention
+    owner: by_value
+    channel: Phone call
+    base_priority: 45
+    goal: Find out why buying stopped and agree the next order. No self-serve pitch on this call.
+    call_note: |
+      OBJECTIVE: understand why spend stopped and book the next order.
+      Do not push self-serve on this call. Retention first, migration later.
+
+      Context: £{gmv_6m} in 6 months over {orders} orders, last order in
+      {last_order_month}. {broker_pct}% of orders were placed by us for them.
+
+      Opening: "Hi {name}, it's {sender} from Fleek. We haven't sourced
+      anything for you since {last_order_month} and I wanted to check in on
+      how {persona_phrase} is doing."
+
+      Find out:
+      - Are they buying from another wholesaler? Price, quality or speed?
+      - Was the last order right? Any grading or delivery issue?
+      - Seasonal pause or cash flow? When do they restock?
+
+      Offer: first look at incoming {product_phrase} in line with their past
+      orders, held for 48h.
+      Close: agree a date for the next order and log the reason they paused.
+    message_subject: "First look at new {product_phrase} for you"
+    message: |
+      Hi {name},
+
+      Good to speak just now. As promised, I'll send you first look at
+      incoming {product_phrase} in line with what you bought before, and I'll
+      hold it for 48 hours so you can decide without pressure.
+
+      Speak soon,
+      {sender}
+
+  migrate_partial:
+    title: Migrate the routine, keep the relationship
+    problem: migration
+    owner: human
+    channel: Video call / meeting
+    base_priority: 38
+    goal: Move repeat reorders onto self-serve while the AM keeps the specialist sourcing. Spend flat or up.
+    call_note: |
+      OBJECTIVE: move the repeatable part of their buying onto the app; keep
+      the specialist sourcing with us. Target: 30% of orders self-placed in
+      60 days, spend flat or up.
+
+      Context: one of our biggest accounts, £{gmv_6m} in 6 months,
+      {orders} orders, {manual_orders} of them placed by us. {chat_threads}
+      chat threads, so we are their buying channel today. Low app use, so go
+      slowly.
+
+      Talk track: "You're one of our most important partners and I want to
+      keep doing the specialist sourcing for you. For the lines you reorder,
+      I'd like you to be able to lock them in the moment they drop instead
+      of waiting for me to message you."
+
+      Do together on the call (20 min, screen share):
+      1. Set up saved searches and drop alerts for their repeat categories.
+      2. Place one reorder together, with them driving.
+      3. Agree the split: they reorder routine stock in-app, we keep handpick
+         sourcing and anything bespoke.
+
+      If they push back on time: "It's two taps once it's set up, and you
+      see new stock before I could have messaged you."
+      Review in 30 days: self-placed share of orders, total spend.
+    message_subject: "Following up: your reorders in the app"
+    message: |
+      Hi {name},
+
+      Thanks for the time today. Your saved searches are set up, so you'll get
+      an alert as soon as matching stock lands and can lock it in yourself.
+      I'm still on the specialist sourcing, so keep sending those my way.
+
+      I'll check in at the end of the month to see how it's going.
+
+      {sender}
+
+  migrate_assisted:
+    title: Curated hand-off - they check out, we pick
+    problem: migration
+    owner: human
+    channel: Video call or WhatsApp
+    base_priority: 35
+    goal: Get the customer to place their next order themselves from a shortlist we prepared.
+    call_note: |
+      OBJECTIVE: their next order is placed by them, from a shortlist we
+      built in the app. We still choose, they press buy.
+
+      Context: £{gmv_6m} in 6 months, {orders} orders, {broker_pct}% placed
+      by us. Migration readiness {readiness}/100 ({pdp_views} product views,
+      {offers} offers, {video_calls} video call requests). If they have used
+      video calls, do this as a screen share.
+
+      Steps:
+      1. Build their next order as a shortlist in the app.
+      2. Send the message below; offer to do it together on a 15-minute call.
+      3. On the call they check out, and make an offer on one item so they
+         learn it.
+      Success: next order self-placed, spend at or above their run-rate
+      (~£{runrate}/month).
+    message_subject: "I've lined up your next order"
+    message: |
+      Hi {name},
+
+      I've put together a shortlist for your next order based on what's
+      worked for {persona_phrase}. It's waiting for you in the app: {app_link}
+
+      You can swap pieces, make an offer on anything, and check out when
+      you're happy. If it's easier, let's do it together on a 15-minute video
+      call this week: {video_link}
+
+      {sender}
+
+  migrate_guided:
+    title: Guided move to self-serve
+    problem: migration
+    owner: review
+    channel: Email
+    base_priority: 26
+    goal: First self-placed order within 30 days.
+    message_subject: "Your next Fleek order, without waiting on me"
+    message: |
+      Hi {name},
+
+      Thanks for the {orders} orders since {first_order_month}. To get you
+      stock faster, you can browse the latest {product_phrase} in the app,
+      make offers and check out in a couple of taps. No need to wait for me
+      to send options.
+
+      I've saved a shortlist based on what you usually buy: {app_link}
+      Order through the app and you'll get {perk}.
+
+      Want a 15-minute walkthrough? Pick a time here: {video_link}
+      I'm still here for anything specialist.
+
+      {sender}
+
+  migrate_auto:
+    title: Self-serve onboarding sequence
+    problem: migration
+    owner: auto
+    channel: Email + in-app
+    base_priority: 10
+    goal: First self-placed order; brokering for small orders only on request.
+    message_subject: "Shop Fleek drops whenever you like"
+    message: |
+      Hi {name},
+
+      You can now pick your own {product_phrase} in the Fleek app, make
+      offers and check out in a couple of taps, at any time of day.
+
+      Start here: {app_link}
+      Questions? Message us in the app: {chat_link}
+
+      The Fleek team
+
+  winback:
+    title: Personal win-back note
+    problem: retention
+    owner: review
+    channel: Email
+    base_priority: 22
+    goal: Next order within 30 days.
+    message_subject: "New {product_phrase} since your last order"
+    message: |
+      Hi {name},
+
+      It's been a little while since your last order in {last_order_month}, so
+      I wanted to flag the new {product_phrase} we've listed since then.
+
+      Tell me what's selling for {persona_phrase} right now and I'll point you
+      to the best lots: {chat_link}
+
+      {sender}
+
+  reactivate:
+    title: Automated reactivation
+    problem: retention
+    owner: auto
+    channel: Email
+    base_priority: 5
+    goal: A return visit and a second order.
+    message_subject: "Fresh stock just landed"
+    message: |
+      Hi {name},
+
+      We've listed new {product_phrase} since your order in {last_order_month}.
+      Set up a saved search and we'll tell you when your kind of stock drops:
+      {app_link}
+
+      The Fleek team
+
+  welcome_second_order:
+    title: Second-order nudge for a new customer
+    problem: growth
+    owner: auto
+    channel: In-app + email
+    base_priority: 20
+    goal: Second order within 30 days (the order that makes a customer stick).
+    message_subject: "Ready for your next lot?"
+    message: |
+      Hi {name},
+
+      Thanks for your first order with Fleek. Most customers who restock in
+      their first month keep stock flowing all season, so here's a head start:
+
+      - Turn on drop alerts so you see new {product_phrase} first: {app_link}
+      - Not sure what to pick? Ask our team in chat: {chat_link}
+
+      The Fleek team
+
+  nudge_video_call:
+    title: Offer a live sourcing video call
+    problem: growth
+    owner: by_value
+    channel: Email
+    base_priority: 22
+    goal: Bigger baskets - book a call and place a larger order off the back of it.
+    message_subject: "See stock live before you commit"
+    message: |
+      Hi {name},
+
+      You've been buying well (around £{avg_order} per order), so I wanted to
+      offer a 15-minute live video call with our sourcing team. We'll walk you
+      through lots before they hit the app, so you can buy bigger with
+      confidence.
+
+      Book a slot: {video_link}
+
+      {sender}
+
+  nudge_chat:
+    title: Nudge to chat - lots of browsing, few orders
+    problem: growth
+    owner: auto
+    channel: In-app message
+    base_priority: 16
+    goal: Turn browsing into orders by removing the question that's stopping them.
+    message_subject: "Can't find the right lot?"
+    message: |
+      Hi {name}, you've looked at {pdp_views} products over the last few
+      months. Tell us what you're hunting for and our team will find it for
+      you, usually the same day: {chat_link}
+
+  nudge_bundles:
+    title: Nudge to bundles - handpick-only buyer
+    problem: growth
+    owner: auto
+    channel: In-app + email
+    base_priority: 15
+    goal: First bundle order - more volume per order without more effort.
+    message_subject: "More pieces per pound"
+    message: |
+      Hi {name},
+
+      You've been buying handpicked pieces, which is great for hero items. To
+      fill the rails for {persona_phrase} at a lower cost per piece, try a
+      bundle: graded mixed lots, ready to list.
+
+      See this week's bundles: {app_link}
+
+      The Fleek team
+
+  nudge_build_a_bundle:
+    title: Nudge to build-a-bundle - bundle buyer who browses a lot
+    problem: growth
+    owner: auto
+    channel: In-app + email
+    base_priority: 15
+    goal: Larger, more frequent orders by letting them pick the mix.
+    message_subject: "Build your own bundle"
+    message: |
+      Hi {name},
+
+      You buy a lot of bundles and browse plenty of stock, so you might like
+      build-a-bundle: choose the categories and mix you want, and we pack it.
+
+      Build yours: {app_link}
+
+      The Fleek team
+
+  keep_warm:
+    title: No outreach - healthy, monitor
+    problem: growth
+    owner: none
+    channel: None
+    base_priority: 0
+    goal: Leave them alone; re-evaluate when their data changes.
