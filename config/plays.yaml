@@ -10,7 +10,8 @@
 #   {name} {sender} {account_id} {gmv_6m} {orders} {manual_orders} {broker_pct}
 #   {runrate} {avg_order} {last_order_month} {first_order_month} {country}
 #   {persona_phrase} {product_phrase} {chat_threads} {video_calls} {pdp_views}
-#   {offers} {readiness} {app_link} {chat_link} {video_link} {perk}
+#   {offers} {readiness} {orders_n} {offers_n} {pdp_views_n} {video_calls_n} {chat_threads_n}
+#   {app_link} {chat_link} {video_link} {perk}
 
 settings:
   sender: Greg
@@ -33,7 +34,7 @@ plays:
     goal: One clean record, so nobody double-contacts the customer or splits their history.
     call_note: |
       HOLD OUTREACH. The CRM flags this record as a duplicate, but it carries
-      £{gmv_6m} over {orders} orders ({broker_pct}% placed by an AM).
+      £{gmv_6m} over {orders_n} ({broker_pct}% placed by an AM).
       1. Find the primary record (same company, email or shipping address).
       2. Merge order history and owner onto the primary.
       3. Re-run the tool: the account will get its real next action.
@@ -51,7 +52,7 @@ plays:
       OBJECTIVE: understand why spend stopped and book the next order.
       Do not push self-serve on this call. Retention first, migration later.
 
-      Context: £{gmv_6m} in 6 months over {orders} orders, last order in
+      Context: £{gmv_6m} in 6 months over {orders_n}, last order in
       {last_order_month}. {broker_pct}% of orders were placed by us for them.
 
       Opening: "Hi {name}, it's {sender} from Fleek. We haven't sourced
@@ -90,8 +91,7 @@ plays:
       60 days, spend flat or up.
 
       Context: one of our biggest accounts, £{gmv_6m} in 6 months,
-      {orders} orders, {manual_orders} of them placed by us. {chat_threads}
-      chat threads, so we are their buying channel today. Low app use, so go
+      {orders_n}, {manual_orders} of them placed by us. {chat_threads_n}, so we are their buying channel today. Low app use, so go
       slowly.
 
       Talk track: "You're one of our most important partners and I want to
@@ -131,9 +131,9 @@ plays:
       OBJECTIVE: their next order is placed by them, from a shortlist we
       built in the app. We still choose, they press buy.
 
-      Context: £{gmv_6m} in 6 months, {orders} orders, {broker_pct}% placed
-      by us. Migration readiness {readiness}/100 ({pdp_views} product views,
-      {offers} offers, {video_calls} video call requests). If they have used
+      Context: £{gmv_6m} in 6 months, {orders_n}, {broker_pct}% placed
+      by us. Migration readiness {readiness}/100 ({pdp_views_n},
+      {offers_n}, {video_calls_n}). If they have used
       video calls, do this as a screen share.
 
       Steps:
@@ -167,7 +167,7 @@ plays:
     message: |
       Hi {name},
 
-      Thanks for the {orders} orders since {first_order_month}. To get you
+      Thanks for the {orders_n} since {first_order_month}. To get you
       stock faster, you can browse the latest {product_phrase} in the app,
       make offers and check out in a couple of taps. No need to wait for me
       to send options.

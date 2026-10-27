@@ -48,6 +48,11 @@ def reflow(text: str) -> str:
     return "\n\n".join(paragraphs)
 
 
+def _n(count: Any, one: str, many: str) -> str:
+    count = int(count)
+    return f"{count:,} {one if count == 1 else many}"
+
+
 def _month_from_offset(offset: Any, months: list[str]) -> str:
     if offset is None or (isinstance(offset, float) and math.isnan(offset)):
         return "recently"
@@ -102,8 +107,8 @@ def _why(row: dict, v: dict) -> str:
         return (f"Spending ~£{v['runrate']}/month at ~£{v['avg_order']} per order and has never used a video call. "
                 f"A live sourcing session is the lever for bigger baskets.")
     if p == "nudge_chat":
-        return (f"High intent, low conversion: {v['pdp_views']} product views and {v['offers']} offers for "
-                f"{v['orders']} orders, and almost no chat. Something is stopping them buying.")
+        return (f"High intent, low conversion: {v['pdp_views_n']} and {v['offers_n']} for "
+                f"{v['orders_n']}, and almost no chat. Something is stopping them buying.")
     if p == "nudge_bundles":
         return "Only buys handpicks. Bundles add volume per order without more effort."
     if p == "nudge_build_a_bundle":
@@ -141,6 +146,11 @@ def render_drafts(df: pd.DataFrame, rules: dict, plays: dict) -> pd.DataFrame:
             pdp_views=f"{int(row['pdp_views_6m']):,}",
             offers=int(row["make_an_offer_6m"]),
             readiness=int(row["migration_readiness"]),
+            orders_n=_n(row["orders_6m"], "order", "orders"),
+            offers_n=_n(row["make_an_offer_6m"], "offer", "offers"),
+            pdp_views_n=_n(row["pdp_views_6m"], "product view", "product views"),
+            video_calls_n=_n(row["video_call_requests"], "video call request", "video call requests"),
+            chat_threads_n=_n(row["chat_threads"], "chat thread", "chat threads"),
             app_link=settings["links"]["app"],
             chat_link=settings["links"]["chat"],
             video_link=settings["links"]["video"],

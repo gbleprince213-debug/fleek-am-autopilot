@@ -48,11 +48,14 @@ def segment(df: pd.DataFrame, rules: dict) -> pd.DataFrame:
         default="",
     )
 
+    def counted(col: str, one: str, many: str) -> pd.Series:
+        n = df[col].astype(int)
+        return n.astype(str) + np.where(n == 1, f" {one}", f" {many}")
+
     pct = df["broker_reliance_pct"].astype(int).astype(str)
-    app = df["app_active_days_6m"].astype(str)
-    pdp = df["pdp_views_6m"].astype(str)
-    offers = df["make_an_offer_6m"].astype(str)
-    activity = app + " app days, " + pdp + " product views, " + offers + " offers"
+    activity = (counted("app_active_days_6m", "app day", "app days") + ", "
+                + counted("pdp_views_6m", "product view", "product views") + ", "
+                + counted("make_an_offer_6m", "offer", "offers"))
     df["segment_reason"] = np.select(
         [df["segment"].eq("broker_reliant"), df["segment"].eq("broker_hybrid"),
          df["segment"].eq("am_self_serving"), df["segment"].eq("am_light_touch")],
