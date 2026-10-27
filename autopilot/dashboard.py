@@ -202,7 +202,9 @@ document.getElementById('asof').textContent = `Run ${R.id} · ${R.source} · as 
 document.getElementById('runline').innerHTML = R.seen_before && !R.new && !R.updated
   ? `<span class="pill strong">File already processed: nothing to do</span>`
   : [`<span class="pill strong">${R.new} new</span>`, `<span class="pill strong">${R.updated} updated</span>`,
-     `<span class="pill">${R.unchanged} skipped (no change)</span>`, `<span class="pill">${R.created} actions created</span>`,
+     `<span class="pill">${R.unchanged} in batch, unchanged: skipped</span>`,
+     ...(T.accounts - R.new - R.updated - R.unchanged > 0 ? [`<span class="pill">${T.accounts - R.new - R.updated - R.unchanged} known accounts not in this batch: left as they are</span>`] : []),
+     `<span class="pill">${R.created} actions created</span>`,
      `<span class="pill">${R.refreshed} refreshed</span>`, `<span class="pill">${R.superseded} superseded</span>`,
      `<span class="pill">${R.dq} data fixes</span>`, `<span class="pill">${R.seconds}s</span>`].join('');
 
