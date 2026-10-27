@@ -1,0 +1,7 @@
+pandas>=2.1
+numpy>=1.26
+openpyxl>=3.1
+PyYAML>=6.0
+pytest>=8.0
+# Optional: only needed for `--llm` draft polishing
+# anthropic>=0.40
