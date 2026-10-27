@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 from autopilot.config import load_plays, load_rules  # noqa: E402
 from autopilot.state import Store  # noqa: E402
 
-XLSX = ROOT / "data" / "raw" / "Fleek - Retention Case Study - Portfolio Data.xlsx"
+XLSX = ROOT / "data" / "raw" / "fleek_portfolio.xlsx"
 
 
 @pytest.fixture(scope="session")

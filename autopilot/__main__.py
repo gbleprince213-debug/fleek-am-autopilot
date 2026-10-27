@@ -34,14 +34,15 @@ def _date(s: str) -> date:
 
 
 def _print_result(res, paths) -> None:
-    if res.input_seen_before and not res.new and not res.updated:
+    if res.skipped_file:
         print(f"{res.source}: already processed (run {res.run_id}). Nothing to do. Use --force to re-apply.")
     else:
         print(f"Run {res.run_id}  {res.source}")
         print(f"  {res.rows_in} rows | {len(res.new)} new | {len(res.updated)} updated | "
               f"{len(res.unchanged)} skipped (no change) | {res.dq_issues} data fixes")
+        held = f", {res.actions_skipped_recent} held back (same nudge sent recently)" if res.actions_skipped_recent else ""
         print(f"  actions: {res.actions_created} created, {res.actions_refreshed} refreshed, "
-              f"{res.actions_superseded} superseded | {res.seconds}s")
+              f"{res.actions_superseded} superseded{held} | {res.seconds}s")
         for aid, detail in res.changes.items():
             print(f"    {aid}: {detail}")
     if paths:
@@ -57,7 +58,7 @@ def cmd_run(args) -> int:
     except IngestError as exc:
         print(f"Input problem: {exc}", file=sys.stderr)
         return 2
-    if res.input_seen_before and not args.force:
+    if res.skipped_file:
         _print_result(res, None)  # nothing changed, so leave the last outputs as they are
         return 0
     paths = write_outputs(store, res, as_of, args.out, rules, dispatch=args.dispatch)
@@ -81,7 +82,7 @@ def cmd_inbox(args) -> int:
         for sheet in sheets:
             res = run(f, sheet, rules, plays, store, as_of=as_of, llm_top=args.llm)
             _print_result(res, None)
-            if not res.input_seen_before:
+            if not res.skipped_file:
                 last_real = res
     if last_real is None:
         print("Nothing new in the inbox.")

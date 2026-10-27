@@ -28,10 +28,11 @@ def test_second_batch_updates_without_duplicating(rules, plays, store, tmp_path)
 
     # The same file again is recognised and skipped
     r3 = run(XLSX, "new_accounts", rules, plays, store, as_of=date(2026, 3, 4))
-    assert r3.input_seen_before and not r3.new and not r3.updated
+    assert r3.skipped_file and not r3.new and not r3.updated
 
     # Forced, every row is unchanged at account level: no new actions
     r4 = run(XLSX, "new_accounts", rules, plays, store, as_of=date(2026, 3, 4), force=True)
+    assert not r4.skipped_file and r4.input_seen_before
     assert len(r4.unchanged) == 50 and r4.actions_created == 0
     assert _open_dupes(store) == 0
 

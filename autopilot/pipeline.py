@@ -68,6 +68,7 @@ class RunResult:
     actions_skipped_recent: int = 0
     seconds: float = 0.0
     input_seen_before: bool = False
+    skipped_file: bool = False  # True only when the whole file was skipped as already processed
 
 
 def hash_rows(df: pd.DataFrame, rules: dict) -> pd.Series:
@@ -107,7 +108,7 @@ def run(input_path: str | Path, sheet: str | None, rules: dict, plays: dict, sto
         # back to older data, so skip unless explicitly forced.
         return RunResult(run_id=int(seen["last_run_id"]), source=source, rows_in=len(raw),
                          unchanged=raw["account_id"].astype(str).tolist(), input_seen_before=True,
-                         seconds=round(time.perf_counter() - t0, 3))
+                         skipped_file=True, seconds=round(time.perf_counter() - t0, 3))
 
     with store.tx():
         run_id = store.start_run(now, as_of.isoformat(), source, fp)

@@ -1,0 +1,52 @@
+# Runs the tests and the daily job, then publishes the dashboard to GitHub Pages.
+# Enable once: repo Settings -> Pages -> Source: "GitHub Actions".
+name: daily-run
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "37 6 * * 1-5"   # weekdays before the AM's day starts (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Tests
+        run: python -m pytest -q
+      - name: Daily job (demo data: first book, then the new batch, then the same batch again)
+        run: make demo
+      - name: Build site
+        run: |
+          mkdir -p site
+          cp out/dashboard.html site/index.html
+          cp out/run_summary.md out/queue_today.csv out/review_queue.csv site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: run
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

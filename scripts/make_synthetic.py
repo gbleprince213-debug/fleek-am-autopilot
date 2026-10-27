@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "data" / "raw" / "Fleek - Retention Case Study - Portfolio Data.xlsx"
+SRC = ROOT / "data" / "raw" / "fleek_portfolio.xlsx"
 MONTHS = ["gmv_sep", "gmv_oct", "gmv_nov", "gmv_dec", "gmv_jan", "gmv_feb"]
 COUNTS = ["manual_orders", "self_serve_orders", "app_active_days_6m", "pdp_views_6m", "make_an_offer_6m",
           "chat_threads", "video_call_requests", "handpick_orders", "bundle_orders"]

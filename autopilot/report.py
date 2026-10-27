@@ -70,8 +70,10 @@ def dispatch_auto(store: Store, queue: pd.DataFrame, as_of: date, out_dir: Path)
 def summary_markdown(res: RunResult, store: Store, queue: pd.DataFrame, accounts: pd.DataFrame,
                      dispatched: int) -> str:
     lines = [f"# Run {res.run_id}: {res.source}", ""]
-    if res.input_seen_before and not res.new and not res.updated:
+    if res.skipped_file:
         lines += ["This exact file was already processed. Nothing to do.", ""]
+    elif res.input_seen_before:
+        lines += ["This file was processed before and re-applied with --force.", ""]
     lines += [
         f"- Rows in batch: **{res.rows_in}**",
         f"- New accounts: **{len(res.new)}**",
@@ -80,6 +82,7 @@ def summary_markdown(res: RunResult, store: Store, queue: pd.DataFrame, accounts
         f"- Data-quality fixes logged: **{res.dq_issues}**",
         f"- Actions created / refreshed / superseded: **{res.actions_created} / {res.actions_refreshed} / "
         f"{res.actions_superseded}**",
+        f"- Held back because the same nudge went out recently: **{res.actions_skipped_recent}**",
         f"- Automated messages sent by the agent: **{dispatched}**",
         f"- Took {res.seconds}s",
         "",
