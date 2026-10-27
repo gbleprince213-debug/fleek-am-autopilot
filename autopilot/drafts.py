@@ -55,14 +55,14 @@ def _month_from_offset(offset: Any, months: list[str]) -> str:
     return MONTH_NAMES[idx] if 0 <= idx < len(MONTH_NAMES) else "recently"
 
 
-def _first_month(row: pd.Series, months: list[str]) -> str:
+def _first_month(row: dict, months: list[str]) -> str:
     for i, m in enumerate(months):
         if row[m] > 0:
             return MONTH_NAMES[i]
     return "recently"
 
 
-def _product_phrase(row: pd.Series) -> str:
+def _product_phrase(row: dict) -> str:
     if row["bundle_heavy"]:
         return "bundles"
     if row["handpick_only"]:
@@ -70,11 +70,11 @@ def _product_phrase(row: pd.Series) -> str:
     return "stock"
 
 
-def _persona_phrase(row: pd.Series) -> str:
+def _persona_phrase(row: dict) -> str:
     return {"Reseller": "your resale business", "Retailer": "the shop"}.get(row["buyer_persona"], "your business")
 
 
-def _why(row: pd.Series, v: dict) -> str:
+def _why(row: dict, v: dict) -> str:
     p = row["play"]
     gmv = f"£{v['gmv_6m']}"
     if p == "fix_crm_duplicate":
@@ -118,7 +118,8 @@ def render_drafts(df: pd.DataFrame, rules: dict, plays: dict) -> pd.DataFrame:
     catalogue = plays["plays"]
     out = {k: [] for k in ["action_title", "channel", "goal", "why", "draft_subject", "draft_message", "call_note"]}
 
-    for _, row in df.iterrows():
+    # Plain dicts are ~10x faster to read than DataFrame rows
+    for row in df.to_dict("records"):
         play = catalogue[row["play"]]
         v = _SafeDict(
             name=settings.get("customer_name_fallback", "there"),

@@ -27,7 +27,9 @@ def render_dashboard(store: Store, queue: pd.DataFrame, accounts: pd.DataFrame, 
     cap = rules.get("dashboard", {}).get("max_accounts", 2000)
     outbox_cap = rules.get("dashboard", {}).get("max_outbox_rows", 300)
     counts = queue["bucket"].value_counts().to_dict() if not queue.empty else {}
-    queue = pd.concat([queue[queue["bucket"] != "outbox"], queue[queue["bucket"] == "outbox"].head(outbox_cap)])
+    queue = pd.concat([queue[queue["bucket"].isin(["today", "next"])].head(outbox_cap),
+                       queue[queue["bucket"] == "approval"].head(outbox_cap),
+                       queue[queue["bucket"] == "outbox"].head(outbox_cap)])
     acts = pd.read_sql_query(
         "SELECT a.* FROM actions a JOIN (SELECT account_id, MAX(action_id) m FROM actions GROUP BY account_id) l "
         "ON a.action_id = l.m", store.conn)
@@ -60,10 +62,15 @@ def render_dashboard(store: Store, queue: pd.DataFrame, accounts: pd.DataFrame, 
 
     hist = store.history()
     hist = hist[hist["account_id"].isin(acc_embed["account_id"])] if not acc_embed.empty else hist.head(0)
-    dq_all = store.dq()
-    dq_counts = (dq_all.groupby(["field", "issue", "action", "severity"]).size().reset_index(name="n")
-                 .sort_values("n", ascending=False)) if not dq_all.empty else dq_all
-    dq_by_acc = dq_all.groupby("account_id")["issue"].apply(lambda s: sorted(set(s))).to_dict() if not dq_all.empty else {}
+    dq_counts = pd.read_sql_query(
+        "SELECT field, issue, action, severity, COUNT(*) n FROM dq_issues GROUP BY 1, 2, 3, 4 ORDER BY n DESC",
+        store.conn)
+    dq_pairs = pd.read_sql_query("SELECT DISTINCT account_id, issue FROM dq_issues", store.conn)
+    if not acc_embed.empty:
+        dq_pairs = dq_pairs[dq_pairs["account_id"].isin(acc_embed["account_id"])]
+    dq_by_acc: dict[str, list[str]] = {}
+    for aid, issue in zip(dq_pairs["account_id"], dq_pairs["issue"]):
+        dq_by_acc.setdefault(aid, []).append(issue)
 
     payload = {
         "as_of": as_of.isoformat(),

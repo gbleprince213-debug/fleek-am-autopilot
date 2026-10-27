@@ -30,13 +30,13 @@ def book(store: Store) -> pd.DataFrame:
 
 
 def build_queue(store: Store, as_of: date, rules: dict) -> pd.DataFrame:
-    acts = store.open_actions()
-    if acts.empty:
+    # Join in SQL on the indexed columns rather than parsing every account's JSON
+    q = pd.read_sql_query(
+        "SELECT a.*, acc.segment, acc.gmv_total_6m FROM actions a JOIN accounts acc USING (account_id) "
+        "WHERE a.status = 'open' AND a.due_date <= ?", store.conn, params=[as_of.isoformat()])
+    if q.empty:
         return pd.DataFrame(columns=QUEUE_COLS)
-    accs = store.account_rows(acts["account_id"].tolist())[["account_id", "segment_label", "gmv_total_6m"]]
-    q = acts.merge(accs, on="account_id", how="left")
-    today = as_of.isoformat()
-    q = q[q["due_date"] <= today].copy()
+    q["segment_label"] = q["segment"].map(SEGMENT_LABELS)
     q = q.sort_values(["priority", "gmv_total_6m"], ascending=[False, False])
     cap = rules["routing"]["daily_human_capacity"]
     human = q["owner"].eq("human")

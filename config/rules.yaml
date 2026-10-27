@@ -151,5 +151,5 @@ routing:
   follow_up_days: 7                   # open human tasks older than this get flagged
 
 dashboard:
-  max_accounts: 2000                  # embed the top N accounts; the full book is in accounts.csv
-  max_outbox_rows: 300                # automated messages are summarised beyond this
+  max_accounts: 1500                  # embed the top N accounts; the full book is in accounts.csv
+  max_outbox_rows: 300                # rows per queue section embedded; full lists are in the CSVs
