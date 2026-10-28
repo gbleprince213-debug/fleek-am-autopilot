@@ -1,5 +1,11 @@
-# Runs the tests and the daily job, then publishes the dashboard to GitHub Pages.
-# Enable once: repo Settings -> Pages -> Source: "GitHub Actions".
+# Runs the tests and the daily job on every push and each weekday morning.
+#
+# Optional: also publish the dashboard to GitHub Pages (needs a public repo,
+# or a paid plan for a private one):
+#   1. Settings -> Pages -> Source: "GitHub Actions"
+#   2. Settings -> Secrets and variables -> Actions -> Variables ->
+#      New repository variable PUBLISH_DASHBOARD = true
+# Without that variable the publish steps are skipped, so the run stays green.
 name: daily-run
 
 on:
@@ -15,7 +21,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: daily-run
   cancel-in-progress: true
 
 jobs:
@@ -30,19 +36,22 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Tests
         run: python -m pytest -q
-      - name: Daily job (demo data: first book, then the new batch, then the same batch again)
+      - name: "Daily job (demo data: first book, then the new batch, then the same batch again)"
         run: make demo
       - name: Build site
+        if: vars.PUBLISH_DASHBOARD == 'true'
         run: |
           mkdir -p site
           cp out/dashboard.html site/index.html
           cp out/run_summary.md out/queue_today.csv out/review_queue.csv site/
       - uses: actions/upload-pages-artifact@v3
+        if: vars.PUBLISH_DASHBOARD == 'true'
         with:
           path: site
 
   deploy:
     needs: run
+    if: vars.PUBLISH_DASHBOARD == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -99,8 +99,10 @@ duplicate actions. Only new and changed accounts are re-scored.
 ## Online
 
 `.github/workflows/daily.yml` runs the tests and the daily job on every push
-and each weekday morning, then publishes the dashboard to GitHub Pages
-(enable Pages with source "GitHub Actions" in the repo settings).
+and each weekday morning. To also publish the dashboard to GitHub Pages
+(public repo, or a paid plan for a private one): set Pages to source "GitHub
+Actions" in the repo settings, then add the Actions variable
+`PUBLISH_DASHBOARD` = `true`.
 
 ## Optional: Claude-polished drafts
 
